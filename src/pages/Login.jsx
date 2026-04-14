@@ -15,7 +15,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await api.post("/admin/login", { email, password });
+      // ✅ FIXED: Use correct endpoint with /api prefix
+      const { data } = await api.post("/api/admin/login", { email, password });
 
       if (data.token) {
         localStorage.setItem(TOKEN_KEY, data.token);
@@ -32,6 +33,7 @@ const Login = () => {
         err?.response?.data?.message ||
         err?.message;
 
+      console.error("Login Error:", err.config?.url, err.response?.status);
       alert(`Login failed: ${message}`);
     }
 
@@ -40,7 +42,8 @@ const Login = () => {
 
   const handleRegister = async () => {
     try {
-      const { data } = await api.post("/admin/register", {
+      // ✅ FIXED: Use correct endpoint with /api prefix
+      const { data } = await api.post("/api/admin/register", {
         email,
         password,
       });
@@ -50,6 +53,7 @@ const Login = () => {
         err?.response?.data?.error ||
         err?.response?.data?.message ||
         err?.message;
+      console.error("Register Error:", err.config?.url, err.response?.status);
       alert(`Register failed: ${message}`);
     }
   };

@@ -1,12 +1,34 @@
 import axios from "axios";
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
-const BASE_URL = (rawBaseUrl ? rawBaseUrl.trim().replace(/\/+$/, "") : "http://localhost:5000/api");
+// ✅ FIXED: Proper environment variable handling with fallback
+const getBaseURL = () => {
+  const rawUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  // If env var not set (common in Render), use default
+  if (!rawUrl || rawUrl.trim() === "") {
+    console.warn("⚠️ VITE_API_BASE_URL not set, using default localhost");
+    return "http://localhost:5000";
+  }
+  
+  // Normalize: trim and remove trailing slashes
+  const normalized = rawUrl.trim().replace(/\/+$/, "");
+  
+  // Log for debugging (remove in production if log spam is an issue)
+  if (import.meta.env.DEV) {
+    console.log("✅ API Base URL:", normalized);
+  }
+  
+  return normalized;
+};
+
+const BASE_URL = getBaseURL();
+
 export const TOKEN_KEY = "adminToken";
 export const REFRESH_TOKEN_KEY = "adminRefreshToken";
 
 const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -40,11 +62,35 @@ const redirectToLogin = () => {
   window.location.href = "/login";
 };
 
+// Response interceptor: handle errors and token refresh
+api.interceptors.response.use(
+  (response) => {
+    if (import.meta.env.DEV) {
+      console.log("✅ API Response:", response.status, response.config.url);
+    }
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      console.warn("🔐 Unauthorized - redirecting to login");
+      redirectToLogin();
+    }
+    if (import.meta.env.DEV) {
+      console.error("❌ API Error:", error.response?.status, error.config?.url, error.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Attach auth token to every request if available
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  // Debug: Log API calls in development
+  if (import.meta.env.DEV) {
+    console.log("📤 API Request:", config.method?.toUpperCase(), config.url);
   }
   return config;
 });
