@@ -9,6 +9,10 @@ const Enquiries = () => {
     setLoading(true);
     getSubmissions()
       .then((data) => setSubmissions(data))
+      .catch((err) => {
+        console.error("Failed to load submissions:", err);
+        setSubmissions([]);
+      })
       .finally(() => setLoading(false));
   };
 

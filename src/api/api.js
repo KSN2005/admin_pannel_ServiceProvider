@@ -4,16 +4,20 @@ import axios from "axios";
 const getBaseURL = () => {
   const rawUrl = import.meta.env.VITE_API_BASE_URL;
   
-  // If env var not set (common in Render), use default
   if (!rawUrl || rawUrl.trim() === "") {
-    console.warn("⚠️ VITE_API_BASE_URL not set, using default localhost");
-    return "http://localhost:5000";
+    if (import.meta.env.DEV) {
+      console.warn("⚠️ VITE_API_BASE_URL not set, using default localhost");
+      return "http://localhost:5000";
+    }
+    console.error("❌ VITE_API_BASE_URL is missing in production. Set it in Render environment variables.");
+    return "";
   }
   
-  // Normalize: trim and remove trailing slashes
-  const normalized = rawUrl.trim().replace(/\/+$/, "");
+  let normalized = rawUrl.trim().replace(/\/+$/, "");
+  if (normalized.endsWith("/api")) {
+    normalized = normalized.replace(/\/api$/, "");
+  }
   
-  // Log for debugging (remove in production if log spam is an issue)
   if (import.meta.env.DEV) {
     console.log("✅ API Base URL:", normalized);
   }
