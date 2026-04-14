@@ -1,33 +1,32 @@
 import React, { useEffect, useState } from "react";
+import { getSubmissions, deleteSubmission } from "../api/submissionsApi";
 
 const Inquiries = () => {
 
   const [contacts, setContacts] = useState([]);
 
   const fetchContacts = () => {
-
-    fetch("http://localhost:5000/api/contact")
-      .then(res => res.json())
-      .then(data => setContacts(data));
-
+    getSubmissions()
+      .then((data) => setContacts(data))
+      .catch((err) => {
+        console.error("Failed to fetch inquiries:", err);
+        setContacts([]);
+      });
   };
 
   useEffect(() => {
-
     fetchContacts();
-
   }, []);
 
   const deleteInquiry = async (id) => {
-
     if (!window.confirm("Delete this inquiry?")) return;
 
-    await fetch(`http://localhost:5000/api/contact/${id}`, {
-      method: "DELETE"
-    });
-
-    fetchContacts();
-
+    try {
+      await deleteSubmission(id);
+      fetchContacts();
+    } catch (err) {
+      console.error("Failed to delete inquiry:", err);
+    }
   };
 
   return (
